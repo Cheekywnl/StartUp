@@ -1,0 +1,57 @@
+export interface PortfolioItem {
+  company: string
+  stage: string
+  year: number
+  outcome: string
+}
+
+export interface Investor {
+  id: number
+  name: string
+  handle: string
+  firm: string
+  role: string
+  avatar: string
+  avatarColor: string
+  location: string
+  focus: string[]
+  stages: string[]
+  checkSize: string
+  bio: string
+  portfolio: PortfolioItem[]
+  email: string
+  linkedin: string
+  twitter: string
+  online: boolean
+  responseRate: string
+  lastActive: string
+}
+
+export interface Message {
+  id: number
+  text: string
+  fromMe: boolean
+  time: string
+  seen?: boolean
+}
+
+export interface Conversation {
+  id: number
+  name: string
+  handle: string
+  avatar: string
+  avatarColor: string
+  online: boolean
+  firm: string
+  lastMessage: string
+  lastTime: string
+  unread: number
+  messages: Message[]
+}
+
+export interface AccountData {
+  name: string
+  product: string
+  description: string
+  github: string
+}

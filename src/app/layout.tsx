@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Providers } from '@/components/Providers'
+import { AppShell } from '@/components/AppShell'
 
 export const metadata: Metadata = {
   title: 'VCMail — Connect with Investors',
@@ -9,7 +11,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-black text-white antialiased">{children}</body>
+      <body className="min-h-screen bg-black text-white antialiased">
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
+      </body>
     </html>
   )
 }
