@@ -8,6 +8,8 @@ const navLinks = [
   { href: "/create-account", label: "Create Account" },
   { href: "/assessment", label: "Assessment" },
   { href: "/investors", label: "Investors" },
+  { href: "/summary", label: "Summary" },
+  { href: "/history", label: "History" },
   { href: "/profile", label: "Profile" },
   { href: "/messages", label: "Messages" },
 ]

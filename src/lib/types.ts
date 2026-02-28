@@ -55,3 +55,18 @@ export interface AccountData {
   description: string
   github: string
 }
+
+export interface HistoryFeedbackItem {
+  label: string
+  score: number
+  note: string
+}
+
+export interface HistoryEntry {
+  timestamp: string
+  account: AccountData | null
+  transcript: string
+  feedback: HistoryFeedbackItem[]
+}
+
+export type HistoryData = Record<string, HistoryEntry[]>

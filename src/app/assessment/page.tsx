@@ -2,9 +2,33 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useApp } from "@/context/AppContext"
+
+async function transcribeWithOpenAI(blob: Blob): Promise<string> {
+  const formData = new FormData()
+  formData.append("file", blob, "recording.webm")
+
+  const res = await fetch("/api/transcribe", {
+    method: "POST",
+    body: formData,
+  })
+
+  const data = (await res.json()) as { text?: string; error?: string }
+  if (!res.ok) {
+    throw new Error(data.error || "Transcription failed")
+  }
+  return data.text?.trim() || ""
+}
+
+const FEEDBACK_DATA = [
+  { label: "Clarity", score: 88, note: "Strong problem definition. Consider leading with the customer pain before the technical solution." },
+  { label: "Credibility", score: 92, note: "Excellent use of specific metrics — ARR, growth rate, and customer count build trust quickly." },
+  { label: "Fundability", score: 79, note: "Clear ask and use of funds. Strengthen by highlighting competitive moat and defensibility." },
+]
 
 export default function AssessmentPage() {
   const router = useRouter()
+  const { accountData, addToHistory, exportHistoryJson } = useApp()
   const [step, setStep] = useState<string>("preview")
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
@@ -24,11 +48,21 @@ export default function AssessmentPage() {
     }
   }, [stream, step])
 
+  const blobUrlRef = useRef<string | null>(null)
+  const [previewReady, setPreviewReady] = useState(false)
+
   useEffect(() => {
+    setPreviewReady(false)
     if (blob && previewVideoRef.current) {
-      previewVideoRef.current.src = URL.createObjectURL(blob)
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+      blobUrlRef.current = URL.createObjectURL(blob)
+      previewVideoRef.current.src = blobUrlRef.current
     }
-  }, [blob])
+  }, [blob, step])
+
+  useEffect(() => () => {
+    if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+  }, [])
 
   useEffect(() => {
     if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) return
@@ -87,12 +121,26 @@ export default function AssessmentPage() {
     if (!blob) return
     setIsTranscribing(true)
     setError(null)
-    await new Promise((r) => setTimeout(r, 2000))
-    setTranscription(
-      "Hi, I'm the founder of DataPulse — we're building real-time analytics infrastructure for mid-market SaaS companies. Most analytics tools today are either too slow or too expensive. We've built a pipeline that delivers sub-second query results at 80% lower cost than existing solutions. We're currently at $1.2M ARR, growing 15% month-over-month, with 12 paying enterprise customers. We're raising a $5M seed round to double our engineering team and expand into the EU market."
-    )
-    setStep("transcribed")
-    setIsTranscribing(false)
+
+    try {
+      const transcriptText = await transcribeWithOpenAI(blob)
+      setTranscription(transcriptText || "No speech detected.")
+      setStep("transcribed")
+      addToHistory({
+        timestamp: new Date().toISOString(),
+        account: accountData,
+        transcript: transcriptText || "No speech detected.",
+        feedback: FEEDBACK_DATA,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Transcription failed. Please try again.")
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+
+  const handleBrowseInvestors = () => {
+    router.push("/investors")
   }
 
   const s = {
@@ -220,6 +268,7 @@ export default function AssessmentPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div
             style={{
+              position: "relative",
               borderRadius: "16px",
               overflow: "hidden",
               background: "#0a0a0a",
@@ -231,8 +280,19 @@ export default function AssessmentPage() {
               ref={previewVideoRef}
               controls
               playsInline
+              onLoadedData={() => setPreviewReady(true)}
               style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
             />
+            {!previewReady && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#0a0a0a",
+                  zIndex: 1,
+                }}
+              />
+            )}
           </div>
           <div style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: "14px", color: "#aaa" }}>
@@ -255,6 +315,7 @@ export default function AssessmentPage() {
           {blob && (
             <div
               style={{
+                position: "relative",
                 borderRadius: "16px",
                 overflow: "hidden",
                 background: "#0a0a0a",
@@ -266,8 +327,19 @@ export default function AssessmentPage() {
                 ref={previewVideoRef}
                 controls
                 playsInline
+                onLoadedData={() => setPreviewReady(true)}
                 style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
               />
+              {!previewReady && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "#0a0a0a",
+                    zIndex: 1,
+                  }}
+                />
+              )}
             </div>
           )}
           <div style={s.card}>
@@ -299,23 +371,7 @@ export default function AssessmentPage() {
               AI Feedback
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {[
-                {
-                  label: "Clarity",
-                  score: 88,
-                  note: "Strong problem definition. Consider leading with the customer pain before the technical solution.",
-                },
-                {
-                  label: "Credibility",
-                  score: 92,
-                  note: "Excellent use of specific metrics — ARR, growth rate, and customer count build trust quickly.",
-                },
-                {
-                  label: "Fundability",
-                  score: 79,
-                  note: "Clear ask and use of funds. Strengthen by highlighting competitive moat and defensibility.",
-                },
-              ].map((item) => (
+              {FEEDBACK_DATA.map((item) => (
                 <div key={item.label}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                     <span style={{ fontSize: "13px", color: "#fff", fontWeight: 600 }}>{item.label}</span>
@@ -343,9 +399,12 @@ export default function AssessmentPage() {
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button onClick={() => router.push("/investors")} style={s.btn()}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <button onClick={handleBrowseInvestors} style={s.btn()}>
               Browse Investors →
+            </button>
+            <button onClick={exportHistoryJson} style={s.outlineBtn}>
+              ↓ Export history.json
             </button>
             <button onClick={handleReset} style={s.outlineBtn}>
               Record Again
