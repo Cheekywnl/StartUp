@@ -67,6 +67,9 @@ export interface HistoryEntry {
   account: AccountData | null
   transcript: string
   feedback: HistoryFeedbackItem[]
+  redFlags?: string[]
+  advice?: string[]
+  overallScore?: number
 }
 
 export type HistoryData = Record<string, HistoryEntry[]>

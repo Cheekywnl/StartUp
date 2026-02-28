@@ -121,7 +121,21 @@ export default function HistoryPage() {
                     >
                       {entry.transcript}
                     </p>
-                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: entry.redFlags?.length || entry.advice?.length ? "12px" : 0 }}>
+                      {entry.overallScore != null && entry.overallScore > 0 && (
+                        <span
+                          style={{
+                            background: "#1e3a1e",
+                            borderRadius: "8px",
+                            padding: "4px 10px",
+                            fontSize: "11px",
+                            color: "#4ade80",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Overall: {entry.overallScore}/100
+                        </span>
+                      )}
                       {entry.feedback.map((f) => (
                         <span
                           key={f.label}
@@ -137,6 +151,16 @@ export default function HistoryPage() {
                         </span>
                       ))}
                     </div>
+                    {entry.redFlags && entry.redFlags.length > 0 && (
+                      <div style={{ fontSize: "12px", color: "#f87171", marginBottom: "8px" }}>
+                        <strong>Red flags:</strong> {entry.redFlags.join(" · ")}
+                      </div>
+                    )}
+                    {entry.advice && entry.advice.length > 0 && (
+                      <div style={{ fontSize: "12px", color: "#60a5fa" }}>
+                        <strong>Advice:</strong> {entry.advice.join(" · ")}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

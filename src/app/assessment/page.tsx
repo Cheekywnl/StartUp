@@ -20,12 +20,6 @@ async function transcribeWithOpenAI(blob: Blob): Promise<string> {
   return data.text?.trim() || ""
 }
 
-const FEEDBACK_DATA = [
-  { label: "Clarity", score: 88, note: "Strong problem definition. Consider leading with the customer pain before the technical solution." },
-  { label: "Credibility", score: 92, note: "Excellent use of specific metrics — ARR, growth rate, and customer count build trust quickly." },
-  { label: "Fundability", score: 79, note: "Clear ask and use of funds. Strengthen by highlighting competitive moat and defensibility." },
-]
-
 export default function AssessmentPage() {
   const router = useRouter()
   const { accountData, addToHistory, exportHistoryJson } = useApp()
@@ -105,6 +99,7 @@ export default function AssessmentPage() {
     chunksRef.current = []
     setBlob(null)
     setTranscription(null)
+    setFeedback(null)
     setError(null)
     setStep("preview")
     if (typeof window !== "undefined" && navigator?.mediaDevices?.getUserMedia) {
@@ -117,21 +112,84 @@ export default function AssessmentPage() {
     }
   }
 
+  const [feedback, setFeedback] = useState<{
+    scores: { label: string; score: number; note: string }[]
+    redFlags: string[]
+    advice: string[]
+    overallScore: number
+  } | null>(null)
+
   const handleTranscribe = async () => {
     if (!blob) return
     setIsTranscribing(true)
     setError(null)
+    setFeedback(null)
 
     try {
       const transcriptText = await transcribeWithOpenAI(blob)
       setTranscription(transcriptText || "No speech detected.")
       setStep("transcribed")
-      addToHistory({
-        timestamp: new Date().toISOString(),
-        account: accountData,
-        transcript: transcriptText || "No speech detected.",
-        feedback: FEEDBACK_DATA,
+
+      const reviewRes = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account: accountData,
+          transcript: transcriptText || "No speech detected.",
+        }),
       })
+
+      const reviewData = (await reviewRes.json()) as {
+        scores?: { label: string; score: number; note: string }[]
+        redFlags?: string[]
+        advice?: string[]
+        overallScore?: number
+        error?: string
+      }
+
+      const fallbackFeedback = {
+        scores: [
+          { label: "Clarity", score: 0, note: "Review unavailable" },
+          { label: "Credibility", score: 0, note: "Review unavailable" },
+          { label: "Investor Fit", score: 0, note: "Review unavailable" },
+          { label: "Ask", score: 0, note: "Review unavailable" },
+          { label: "Consistency", score: 0, note: "Review unavailable" },
+        ],
+        redFlags: [] as string[],
+        advice: [] as string[],
+        overallScore: 0,
+      }
+
+      if (!reviewRes.ok) {
+        setError(reviewData.error || "Review failed")
+        setFeedback(fallbackFeedback)
+        addToHistory({
+          timestamp: new Date().toISOString(),
+          account: accountData,
+          transcript: transcriptText || "No speech detected.",
+          feedback: fallbackFeedback.scores,
+          redFlags: fallbackFeedback.redFlags,
+          advice: fallbackFeedback.advice,
+          overallScore: fallbackFeedback.overallScore,
+        })
+      } else {
+        const reviewFeedback = {
+          scores: reviewData.scores ?? [],
+          redFlags: reviewData.redFlags ?? [],
+          advice: reviewData.advice ?? [],
+          overallScore: reviewData.overallScore ?? 0,
+        }
+        setFeedback(reviewFeedback)
+        addToHistory({
+          timestamp: new Date().toISOString(),
+          account: accountData,
+          transcript: transcriptText || "No speech detected.",
+          feedback: reviewFeedback.scores,
+          redFlags: reviewFeedback.redFlags,
+          advice: reviewFeedback.advice,
+          overallScore: reviewFeedback.overallScore,
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transcription failed. Please try again.")
     } finally {
@@ -370,34 +428,69 @@ export default function AssessmentPage() {
             >
               AI Feedback
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {FEEDBACK_DATA.map((item) => (
-                <div key={item.label}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span style={{ fontSize: "13px", color: "#fff", fontWeight: 600 }}>{item.label}</span>
-                    <span style={{ fontSize: "13px", color: "#4ade80", fontWeight: 700 }}>{item.score}/100</span>
+            {feedback ? (
+              <>
+                {feedback.overallScore > 0 && (
+                  <div style={{ marginBottom: "16px", fontSize: "14px", color: "#aaa" }}>
+                    Overall score: <strong style={{ color: "#4ade80" }}>{feedback.overallScore}/100</strong>
                   </div>
-                  <div
-                    style={{
-                      height: "4px",
-                      background: "#1a1a1a",
-                      borderRadius: "4px",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${item.score}%`,
-                        background: "linear-gradient(90deg, #405de6, #00b894)",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#555", lineHeight: 1.5 }}>{item.note}</div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {feedback.scores.map((item) => (
+                    <div key={item.label}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "13px", color: "#fff", fontWeight: 600 }}>{item.label}</span>
+                        <span style={{ fontSize: "13px", color: "#4ade80", fontWeight: 700 }}>{item.score}/100</span>
+                      </div>
+                      <div
+                        style={{
+                          height: "4px",
+                          background: "#1a1a1a",
+                          borderRadius: "4px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "100%",
+                            width: `${item.score}%`,
+                            background: "linear-gradient(90deg, #405de6, #00b894)",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#555", lineHeight: 1.5 }}>{item.note}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                {feedback.redFlags && feedback.redFlags.length > 0 && (
+                  <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #1e3a1e" }}>
+                    <div style={{ fontSize: "11px", color: "#f87171", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "8px" }}>
+                      Red flags
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: "#ddd", lineHeight: 1.6 }}>
+                      {feedback.redFlags.map((flag, i) => (
+                        <li key={i}>{flag}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {feedback.advice && feedback.advice.length > 0 && (
+                  <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #1e3a1e" }}>
+                    <div style={{ fontSize: "11px", color: "#60a5fa", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "8px" }}>
+                      Advice
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: "#ddd", lineHeight: 1.6 }}>
+                      {feedback.advice.map((adv, i) => (
+                        <li key={i}>{adv}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ color: "#666", fontSize: "14px" }}>Loading AI feedback…</div>
+            )}
           </div>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <button onClick={handleBrowseInvestors} style={s.btn()}>

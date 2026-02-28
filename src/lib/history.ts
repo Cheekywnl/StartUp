@@ -84,14 +84,15 @@ export function getHistorySummary(history: HistoryData): HistorySummary {
 
   let trend: "improving" | "declining" | "stable" | null = null
   if (entries.length >= 3) {
+    const scoreFor = (e: HistoryEntry) => {
+      if (e.overallScore != null && e.overallScore > 0) return e.overallScore
+      if (e.feedback.length === 0) return 0
+      return e.feedback.reduce((a, f) => a + f.score, 0) / e.feedback.length
+    }
     const firstHalf = entries.slice(-Math.ceil(entries.length / 2))
     const secondHalf = entries.slice(0, Math.floor(entries.length / 2))
-    const avgFirst =
-      firstHalf.reduce((s, e) => s + e.feedback.reduce((a, f) => a + f.score, 0) / e.feedback.length, 0) /
-      firstHalf.length
-    const avgSecond =
-      secondHalf.reduce((s, e) => s + e.feedback.reduce((a, f) => a + f.score, 0) / e.feedback.length, 0) /
-      secondHalf.length
+    const avgFirst = firstHalf.reduce((s, e) => s + scoreFor(e), 0) / firstHalf.length
+    const avgSecond = secondHalf.reduce((s, e) => s + scoreFor(e), 0) / secondHalf.length
     const diff = avgSecond - avgFirst
     if (diff > 2) trend = "improving"
     else if (diff < -2) trend = "declining"
