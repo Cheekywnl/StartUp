@@ -10,7 +10,7 @@ import { useApp } from "@/context/AppContext"
 import { getAllEntries } from "@/lib/history"
 
 export default function InvestorsPage() {
-  const { history } = useApp()
+  const { history, devInvestorsUnlocked } = useApp()
   const [selectedInvestor, setSelectedInvestor] = useState<Investor | null>(null)
   const [search, setSearch] = useState<string>("")
   const [stageFilter, setStageFilter] = useState<string>("All")
@@ -18,7 +18,7 @@ export default function InvestorsPage() {
 
   const entries = getAllEntries(history)
   const latestScore = entries[0]?.overallScore ?? 0
-  const canViewInvestors = latestScore >= 80
+  const canViewInvestors = devInvestorsUnlocked || latestScore >= 80
 
   const stages = ["All", "Seed", "Series A", "Series B"]
   const allInterests = ["All", ...Array.from(new Set(INVESTORS.flatMap((inv) => inv.focus)))]
@@ -35,7 +35,7 @@ export default function InvestorsPage() {
 
   if (!canViewInvestors) {
     return (
-      <div style={{ padding: "40px 32px", maxWidth: "560px" }}>
+      <div style={{ padding: "40px 32px", maxWidth: "560px", margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
           Potential Investors
         </h1>
@@ -79,7 +79,7 @@ export default function InvestorsPage() {
   }
 
   return (
-    <div style={{ padding: "40px 32px" }}>
+    <div style={{ padding: "40px 32px", maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
           Potential Investors

@@ -2,12 +2,16 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import type { AccountData, Conversation, Message, HistoryData, HistoryEntry } from "@/lib/types"
+import type { ThemeId } from "@/lib/themes"
 import { INITIAL_CONVERSATIONS } from "@/lib/data"
 
 const STORAGE_ACCOUNT = "vcmail_account"
 const STORAGE_CONVERSATIONS = "vcmail_conversations"
 const STORAGE_MESSAGES = "vcmail_messages"
 const STORAGE_HISTORY = "vcmail_history"
+const STORAGE_THEME = "vcmail_theme"
+const STORAGE_WORK_ON = "vcmail_work_on"
+const STORAGE_DEV_INVESTORS = "vcmail_dev_investors_unlocked"
 
 interface AppContextValue {
   accountData: AccountData | null
@@ -19,7 +23,13 @@ interface AppContextValue {
   history: HistoryData
   addToHistory: (entry: HistoryEntry) => void
   exportHistoryJson: () => void
+  themeId: ThemeId
+  setThemeId: (id: ThemeId) => void
+  workOnNote: string
+  setWorkOnNote: (note: string) => void
   isHydrated: boolean
+  devInvestorsUnlocked: boolean
+  setDevInvestorsUnlocked: (unlocked: boolean) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -64,6 +74,34 @@ function loadHistory(): HistoryData {
   }
 }
 
+function loadTheme(): ThemeId {
+  if (typeof window === "undefined") return "timeline"
+  try {
+    const s = localStorage.getItem(STORAGE_THEME)
+    return s === "timelineLight" ? "timelineLight" : "timeline"
+  } catch {
+    return "timeline"
+  }
+}
+
+function loadWorkOnNote(): string {
+  if (typeof window === "undefined") return ""
+  try {
+    return localStorage.getItem(STORAGE_WORK_ON) ?? ""
+  } catch {
+    return ""
+  }
+}
+
+function loadDevInvestorsUnlocked(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    return localStorage.getItem(STORAGE_DEV_INVESTORS) === "1"
+  } catch {
+    return false
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [accountData, setAccountDataState] = useState<AccountData | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>(INITIAL_CONVERSATIONS)
@@ -71,6 +109,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     Object.fromEntries(INITIAL_CONVERSATIONS.map((c) => [c.id, c.messages]))
   )
   const [history, setHistory] = useState<HistoryData>({})
+  const [themeId, setThemeIdState] = useState<ThemeId>("timeline")
+  const [workOnNote, setWorkOnNoteState] = useState<string>("")
+  const [devInvestorsUnlocked, setDevInvestorsUnlockedState] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
@@ -78,7 +119,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setConversations(loadConversations())
     setAllMessages(loadMessages())
     setHistory(loadHistory())
+    setThemeIdState(loadTheme())
+    setWorkOnNoteState(loadWorkOnNote())
     setHydrated(true)
+  }, [])
+
+  const setWorkOnNote = useCallback((note: string) => {
+    setWorkOnNoteState(note)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_WORK_ON, note)
+    }
+  }, [])
+
+  const setThemeId = useCallback((id: ThemeId) => {
+    setThemeIdState(id)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_THEME, id)
+    }
+  }, [])
+
+  const setDevInvestorsUnlocked = useCallback((unlocked: boolean) => {
+    setDevInvestorsUnlockedState(unlocked)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_DEV_INVESTORS, unlocked ? "1" : "0")
+    }
   }, [])
 
   const setAccountData = useCallback((data: AccountData | null) => {
@@ -141,7 +205,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         history,
         addToHistory,
         exportHistoryJson,
+        themeId,
+        setThemeId,
+        workOnNote,
+        setWorkOnNote,
         isHydrated: hydrated,
+        devInvestorsUnlocked,
+        setDevInvestorsUnlocked,
       }}
     >
       {children}

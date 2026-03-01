@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import type { AccountData } from "@/lib/types"
 
+type GitHubVerifyState = "idle" | "verifying" | "valid" | "invalid"
+
 export default function CreateAccountPage() {
   const router = useRouter()
   const { accountData, setAccountData, isHydrated } = useApp()
@@ -16,6 +18,8 @@ export default function CreateAccountPage() {
     }
   }, [isHydrated, accountData])
   const [errors, setErrors] = useState<Partial<Record<keyof AccountData, string>>>({})
+  const [githubVerify, setGithubVerify] = useState<GitHubVerifyState>("idle")
+  const [githubVerifyError, setGithubVerifyError] = useState<string | null>(null)
 
   const validate = (): boolean => {
     const e: Partial<Record<keyof AccountData, string>> = {}
@@ -23,6 +27,7 @@ export default function CreateAccountPage() {
     if (!form.product.trim()) e.product = "Product is required"
     if (!form.description.trim()) e.description = "Description is required"
     else if (form.description.length < 20) e.description = "Description must be at least 20 characters"
+    if (form.github.trim() && githubVerify === "invalid") e.github = githubVerifyError || "Invalid GitHub repository"
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -31,16 +36,44 @@ export default function CreateAccountPage() {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
     if (errors[name as keyof AccountData]) setErrors((prev) => ({ ...prev, [name]: undefined }))
+    if (name === "github") {
+      setGithubVerify("idle")
+      setGithubVerifyError(null)
+    }
+  }
+
+  const verifyGitHub = async () => {
+    const url = form.github.trim()
+    if (!url) {
+      setErrors((prev) => ({ ...prev, github: "Enter a GitHub URL to verify" }))
+      return
+    }
+    setGithubVerify("verifying")
+    setGithubVerifyError(null)
+    try {
+      const res = await fetch(`/api/github?url=${encodeURIComponent(url)}&verify=1`)
+      const data = (await res.json()) as { valid?: boolean; error?: string }
+      if (data.valid) {
+        setGithubVerify("valid")
+        setErrors((prev) => ({ ...prev, github: undefined }))
+      } else {
+        setGithubVerify("invalid")
+        setGithubVerifyError(data.error || "Invalid repository")
+      }
+    } catch {
+      setGithubVerify("invalid")
+      setGithubVerifyError("Could not verify. Check your connection.")
+    }
   }
 
   const handleSubmit = () => {
     if (!validate()) return
     setAccountData(form)
-    router.push("/assessment")
+    router.push("/")
   }
 
   return (
-    <div style={{ padding: "40px 32px", maxWidth: "560px" }}>
+    <div style={{ padding: "40px 32px", maxWidth: "560px", margin: "0 auto", textAlign: "center" }}>
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
           Create Account
@@ -62,7 +95,7 @@ export default function CreateAccountPage() {
             key={name}
             style={{
               background: "#111",
-              border: `1px solid ${errors[name] ? "#ef4444" : "#1a1a1a"}`,
+              border: `1px solid ${errors[name] ? "#ef4444" : name === "github" && githubVerify === "valid" ? "#22c55e" : "#1a1a1a"}`,
               borderRadius: "16px",
               padding: "16px 20px",
             }}
@@ -98,25 +131,54 @@ export default function CreateAccountPage() {
                 }}
               />
             ) : (
-              <input
-                type="text"
-                name={name}
-                value={form[name]}
-                onChange={handleChange}
-                placeholder={placeholder}
-                style={{
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  color: "#fff",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                }}
-              />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <input
+                  type="text"
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  placeholder={placeholder}
+                  style={{
+                    flex: 1,
+                    background: "none",
+                    border: "none",
+                    outline: "none",
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                  }}
+                />
+                {name === "github" && (
+                  <button
+                    type="button"
+                    onClick={verifyGitHub}
+                    disabled={githubVerify === "verifying" || !form.github.trim()}
+                    style={{
+                      flexShrink: 0,
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      border: "1px solid #333",
+                      background: githubVerify === "valid" ? "#166534" : "#222",
+                      color: githubVerify === "valid" ? "#4ade80" : "#aaa",
+                      cursor: githubVerify === "verifying" || !form.github.trim() ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {githubVerify === "verifying"
+                      ? "Verifying…"
+                      : githubVerify === "valid"
+                        ? "✓ Verified"
+                        : "Verify"}
+                  </button>
+                )}
+              </div>
             )}
             {errors[name] && (
               <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "6px" }}>{errors[name]}</div>
+            )}
+            {name === "github" && githubVerify === "invalid" && githubVerifyError && !errors.github && (
+              <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "6px" }}>{githubVerifyError}</div>
             )}
           </div>
         ))}

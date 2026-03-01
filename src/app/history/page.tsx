@@ -11,11 +11,11 @@ export default function HistoryPage() {
   const totalEntries = dates.reduce((sum, d) => sum + history[d].length, 0)
 
   return (
-    <div style={{ padding: "40px 32px", maxWidth: "800px" }}>
+    <div style={{ padding: "40px 32px", maxWidth: "800px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
         <div>
           <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
-            Recording History
+            Feedback
           </h1>
           <p style={{ color: "#555", fontSize: "14px", margin: 0 }}>
             {totalEntries} recording{totalEntries !== 1 ? "s" : ""} stored locally
@@ -35,7 +35,7 @@ export default function HistoryPage() {
             cursor: totalEntries === 0 ? "not-allowed" : "pointer",
           }}
         >
-          ↓ Download history.json
+          ↓ Download feedback.json
         </button>
       </div>
 

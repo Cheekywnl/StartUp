@@ -2,7 +2,10 @@
   "name": "hackathon2-vcmail",
   "version": "1.0.0",
   "scripts": {
+    "clean": "rm -rf .next node_modules/.cache",
     "dev": "next dev",
+    "dev:fresh": "npm run clean && next dev",
+    "dev:prod": "npm run clean && next build && next start",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

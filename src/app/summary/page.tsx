@@ -10,7 +10,7 @@ export default function SummaryPage() {
 
   if (summary.totalRecordings === 0) {
     return (
-      <div style={{ padding: "40px 32px", maxWidth: "680px" }}>
+      <div style={{ padding: "40px 32px", maxWidth: "680px", margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
           Summary
         </h1>
@@ -45,7 +45,7 @@ export default function SummaryPage() {
   }
 
   return (
-    <div style={{ padding: "40px 32px", maxWidth: "800px" }}>
+    <div style={{ padding: "40px 32px", maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
       <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
         Summary
       </h1>
@@ -55,7 +55,7 @@ export default function SummaryPage() {
           ` (${new Date(summary.dateRange.last).toLocaleDateString()} – ${new Date(summary.dateRange.first).toLocaleDateString()})`}
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px", width: "100%" }}>
         {/* Trend */}
         {summary.trend && (
           <div
@@ -264,7 +264,7 @@ export default function SummaryPage() {
             fontWeight: 600,
           }}
         >
-          View full history →
+          View full feedback →
         </Link>
       </div>
     </div>

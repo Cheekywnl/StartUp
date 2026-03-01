@@ -3,21 +3,31 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
+import { THEMES } from "@/lib/themes"
 
-const navLinks = [
+const navLinksLoggedOut = [
   { href: "/create-account", label: "Create Account" },
   { href: "/assessment", label: "Assessment" },
   { href: "/investors", label: "Investors" },
   { href: "/summary", label: "Summary" },
-  { href: "/history", label: "History" },
-  { href: "/profile", label: "Profile" },
+  { href: "/history", label: "Feedback" },
+  { href: "/messages", label: "Messages" },
+]
+
+const navLinksLoggedIn = [
+  { href: "/", label: "Home" },
+  { href: "/assessment", label: "Assessment" },
+  { href: "/investors", label: "Investors" },
+  { href: "/summary", label: "Summary" },
+  { href: "/history", label: "Feedback" },
   { href: "/messages", label: "Messages" },
 ]
 
 export function AppNav() {
   const pathname = usePathname()
-  const { accountData, conversations } = useApp()
-  const links = accountData ? navLinks.filter((l) => l.href !== "/create-account") : navLinks
+  const { accountData, conversations, themeId, devInvestorsUnlocked, setDevInvestorsUnlocked } = useApp()
+  const theme = THEMES[themeId]
+  const links = accountData ? navLinksLoggedIn : navLinksLoggedOut
   const unreadCount = conversations.reduce((sum, c) => sum + c.unread, 0)
 
   return (
@@ -27,30 +37,94 @@ export function AppNav() {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "16px 24px",
-        borderBottom: "1px solid #111",
-        background: "#000",
+        borderBottom: `1px solid ${theme.border}`,
+        background: theme.bgSecondary,
         flexWrap: "wrap",
         gap: "12px",
       }}
     >
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "#fff" }}>
-        <div
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: "40px" }}>
+        <button
+          onClick={() => setDevInvestorsUnlocked(!devInvestorsUnlocked)}
+          title={devInvestorsUnlocked ? "Investors unlocked (dev)" : "Unlock investors (dev)"}
           style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "8px",
-            background: "linear-gradient(135deg, #667eea, #764ba2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "12px",
-            fontWeight: 700,
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
+            background: devInvestorsUnlocked ? "rgba(34, 197, 94, 0.2)" : theme.activeBg,
+            border: `1px solid ${devInvestorsUnlocked ? "#22c55e" : theme.border}`,
+            color: devInvestorsUnlocked ? "#22c55e" : theme.textMuted,
+            fontSize: "14px",
+            cursor: "pointer",
           }}
         >
-          V
-        </div>
-        <span style={{ fontSize: "16px", fontWeight: 600 }}>VCMail</span>
-      </Link>
+          {devInvestorsUnlocked ? "🔓" : "🔒"}
+        </button>
+        {accountData ? (
+          <Link
+            href="/profile"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              textDecoration: "none",
+              color: theme.text,
+            }}
+            title="Profile"
+          >
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: `linear-gradient(135deg, ${theme.accentStart}, ${theme.accentEnd})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {accountData.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </div>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 600 }}>{accountData.name}</div>
+              <div style={{ fontSize: "11px", color: theme.textMuted }}>{accountData.product}</div>
+            </div>
+          </Link>
+        ) : (
+          <Link
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              background: theme.activeBg,
+              border: `1px solid ${theme.border}`,
+              textDecoration: "none",
+              color: theme.textMuted,
+              fontSize: "14px",
+              fontWeight: 700,
+            }}
+            title="Home"
+          >
+            V
+          </Link>
+        )}
+      </div>
       <nav style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
         {links.map((link) => {
           const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
@@ -65,8 +139,8 @@ export function AppNav() {
                 fontSize: "13px",
                 fontWeight: 600,
                 textDecoration: "none",
-                color: isActive ? "#fff" : "#888",
-                background: isActive ? "#222" : "transparent",
+                color: isActive ? theme.text : theme.textMuted,
+                background: isActive ? theme.activeBg : "transparent",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
@@ -93,48 +167,6 @@ export function AppNav() {
           )
         })}
       </nav>
-      {accountData && (
-        <Link
-          href="/profile"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "20px",
-            padding: "8px 16px",
-            textDecoration: "none",
-            color: "#fff",
-          }}
-        >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #667eea, #764ba2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "13px",
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            {accountData.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
-          </div>
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 600 }}>{accountData.name}</div>
-            <div style={{ color: "#666", fontSize: "11px" }}>{accountData.product}</div>
-          </div>
-        </Link>
-      )}
     </header>
   )
 }

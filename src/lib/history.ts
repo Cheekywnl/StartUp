@@ -109,3 +109,76 @@ export function getHistorySummary(history: HistoryData): HistorySummary {
     trend,
   }
 }
+
+/** Checklist items derived from pitch summary, to inject into timeline phases */
+export interface SummaryChecklistItem {
+  id: string
+  label: string
+  group: string
+}
+
+/** Map summary dimension to phase index (0-based). Fundraising = 3. */
+function phaseForDimension(label: string): number {
+  const map: Record<string, number> = {
+    Clarity: 0,        // Ideation
+    Credibility: 1,    // Build MVP
+    "Investor Fit": 3, // Fundraising
+    Ask: 3,            // Fundraising
+    Consistency: 3,   // Fundraising
+  }
+  return map[label] ?? 3
+}
+
+/** Get summary-derived checklist items per phase. Keys are phase indices (0-4). */
+export function getSummaryPhaseItems(history: HistoryData): Record<number, SummaryChecklistItem[]> {
+  const summary = getHistorySummary(history)
+  const byPhase: Record<number, SummaryChecklistItem[]> = {}
+
+  const add = (phaseIdx: number, item: SummaryChecklistItem) => {
+    if (!byPhase[phaseIdx]) byPhase[phaseIdx] = []
+    byPhase[phaseIdx].push(item)
+  }
+
+  if (summary.weakestArea) {
+    const phase = phaseForDimension(summary.weakestArea)
+    add(phase, {
+      id: `fb-weak-${summary.weakestArea.replace(/\s/g, "-")}`,
+      label: `Focus on improving ${summary.weakestArea}`,
+      group: "Pitch Feedback",
+    })
+  }
+
+  const lowScores = Object.entries(summary.avgScores)
+    .filter(([, score]) => score < 80)
+    .sort((a, b) => a[1] - b[1])
+  for (const [label] of lowScores) {
+    if (label !== summary.weakestArea) {
+      const phase = phaseForDimension(label)
+      add(phase, {
+        id: `fb-score-${label.replace(/\s/g, "-")}`,
+        label: `Address feedback on ${label}`,
+        group: "Pitch Feedback",
+      })
+    }
+  }
+
+  summary.recentNotes.forEach((note, i) => {
+    const phase = phaseForDimension(note.label)
+    add(phase, {
+      id: `fb-note-${i}`,
+      label: `${note.label}: ${note.note}`,
+      group: "Pitch Feedback",
+    })
+  })
+
+  if (summary.strongestArea) {
+    const phase = phaseForDimension(summary.strongestArea)
+    add(phase, {
+      id: `fb-strong-${summary.strongestArea.replace(/\s/g, "-")}`,
+      label: `Keep strengthening ${summary.strongestArea}`,
+      group: "Pitch Feedback",
+    })
+  }
+
+  return byPhase
+}

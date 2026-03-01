@@ -50,7 +50,7 @@ export default function ProfilePage() {
     .slice(0, 2)
 
   return (
-    <div style={{ padding: "40px 32px", maxWidth: "720px" }}>
+    <div style={{ padding: "40px 32px", maxWidth: "720px", margin: "0 auto", textAlign: "center" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
         <Link
           href="/investors"
