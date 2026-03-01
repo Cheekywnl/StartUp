@@ -1,14 +1,39 @@
-# VCMail — Hackathon2
+# StartUp — Pitch Coach for Founders
 
-A standalone investor-connect app with pitch recording, AI feedback, and messaging. Built with Next.js and styled with a dark theme.
+**StartUp** helps early-stage founders validate ideas and nail their pitch—whether at a hackathon, with an investor, or at a demo day. Record a 60-second pitch, get AI-powered feedback, and move from practice to outreach in one place.
+
+Built for the **Warwick Finance Societies Fintech Hackathon** (Category 3: Solution for Startups).
+
+---
+
+## Why We Built This
+
+Startups face a common problem: you get one shot to make an impression. Most founders underprepare. They wing it. They don’t know how they sound until it’s too late.
+
+We built StartUp because we wanted a tool that actually helps founders *create* and *validate* their startups—not just pitch to investors. By recording, transcribing, and scoring pitches with AI, founders can:
+
+- **Validate ideas** — See how clear and compelling their pitch sounds before they step on stage
+- **Improve fast** — Get scores, red flags, and concrete advice on every recording
+- **Practice for real events** — Use hackathon-specific categories and judging criteria
+- **Move to outreach** — Access an investor directory and messaging when they’re ready
+
+StartUp is the pitch coach and investor hub founders need before they ever walk into a room.
+
+---
 
 ## Features
 
 - **Create Account** — Register with name, product, description, and GitHub
-- **Pitch Assessment** — Record a video pitch, get transcript and AI feedback
-- **Investor Directory** — Browse VCs with filters (stage, focus area)
-- **Messages** — DM investors and manage conversations
-- **Profile** — View and edit your account
+- **Pitch Assessment** — Record a 60-second video pitch; AI transcribes and scores you on clarity, credibility, investor fit, your ask, and consistency
+- **Hackathon Modes** — Practice for Warwick Fintech Hackathon categories:
+  - **Data in Finance** — Tools using financial data for decision-making
+  - **Financial Inclusion** — Apps that help people manage money and access financial services
+  - **Solution for Startups** — Tools to aid with creating startups (our category)
+- **Feedback & Progress** — Track scores over time, see red flags, and get actionable advice
+- **Investor Directory** — Browse VCs by stage and focus (unlock with a strong pitch score)
+- **Messages** — DM investors and manage conversations in-app
+
+---
 
 ## Getting Started
 
@@ -19,9 +44,13 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Tech Stack
+---
 
-- Next.js 14
-- React 18
-- Tailwind CSS
-- TypeScript
+
+## Hackathon Fit
+
+StartUp aligns with **Category 3: Solution for Startups**:
+
+## License
+
+MIT
