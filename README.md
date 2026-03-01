@@ -37,8 +37,31 @@ StartUp is the pitch coach and investor hub founders need before they ever walk 
 
 ## Getting Started
 
+### 1. Clone and install
+
 ```bash
+git clone https://github.com/Cheekywnl/StartUp.git
+cd StartUp
 npm install
+```
+
+### 2. Add your OpenAI API key
+
+StartUp uses OpenAI's Whisper API for pitch transcription and GPT for feedback. You need your own API key.
+
+1. Get a key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Create a `.env.local` file in the project root (copy from `.env.example` if needed)
+3. Add your key:
+
+```
+OPENAI_API_KEY=sk-your-key-here
+```
+
+**Important:** Never commit `.env.local`—it's in `.gitignore`. Each developer needs their own key.
+
+### 3. Run the app
+
+```bash
 npm run dev
 ```
 
