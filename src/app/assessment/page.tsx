@@ -359,7 +359,7 @@ export default function AssessmentPage() {
           </div>
           <div style={{ display: "flex", gap: "12px" }}>
             <button onClick={handleTranscribe} disabled={isTranscribing} style={s.btn()}>
-              {isTranscribing ? "Transcribing…" : "✦ Get Transcript"}
+              {isTranscribing ? "Transcribing…" : "✦ Review Pitch"}
             </button>
             <button onClick={handleReset} style={s.outlineBtn}>
               Record Again
@@ -400,22 +400,6 @@ export default function AssessmentPage() {
               )}
             </div>
           )}
-          <div style={s.card}>
-            <div
-              style={{
-                fontSize: "11px",
-                color: "#555",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                marginBottom: "12px",
-              }}
-            >
-              Transcript
-            </div>
-            <p style={{ fontSize: "15px", color: "#ddd", lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>
-              {transcription || "No speech detected."}
-            </p>
-          </div>
           <div style={{ ...s.card, background: "#0d1117", border: "1px solid #1e3a1e" }}>
             <div
               style={{
@@ -493,9 +477,15 @@ export default function AssessmentPage() {
             )}
           </div>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <button onClick={handleBrowseInvestors} style={s.btn()}>
-              Browse Investors →
-            </button>
+            {feedback && feedback.overallScore >= 80 ? (
+              <button onClick={handleBrowseInvestors} style={s.btn()}>
+                Browse Investors →
+              </button>
+            ) : feedback ? (
+              <button onClick={() => router.push("/")} style={s.btn()}>
+                Return to Home
+              </button>
+            ) : null}
             <button onClick={exportHistoryJson} style={s.outlineBtn}>
               ↓ Export history.json
             </button>

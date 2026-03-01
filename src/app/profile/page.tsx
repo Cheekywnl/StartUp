@@ -5,6 +5,31 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 
+function LogoutButton() {
+  const router = useRouter()
+  const { setAccountData } = useApp()
+  return (
+    <button
+      onClick={() => {
+        setAccountData(null)
+        router.push("/")
+      }}
+      style={{
+        background: "#111",
+        border: "1px solid #222",
+        borderRadius: "12px",
+        padding: "14px 28px",
+        color: "#888",
+        fontWeight: 600,
+        fontSize: "14px",
+        cursor: "pointer",
+      }}
+    >
+      Logout
+    </button>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const { accountData, isHydrated } = useApp()
@@ -175,23 +200,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <Link
-        href="/investors"
-        style={{
-          background: "linear-gradient(135deg, #405de6, #833ab4, #c13584)",
-          border: "none",
-          borderRadius: "12px",
-          padding: "14px 28px",
-          color: "#fff",
-          fontWeight: 700,
-          fontSize: "14px",
-          cursor: "pointer",
-          textDecoration: "none",
-          display: "inline-block",
-        }}
-      >
-        Browse Investors →
-      </Link>
+      <LogoutButton />
     </div>
   )
 }

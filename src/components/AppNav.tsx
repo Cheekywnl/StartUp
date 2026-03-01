@@ -17,6 +17,7 @@ const navLinks = [
 export function AppNav() {
   const pathname = usePathname()
   const { accountData, conversations } = useApp()
+  const links = accountData ? navLinks.filter((l) => l.href !== "/create-account") : navLinks
   const unreadCount = conversations.reduce((sum, c) => sum + c.unread, 0)
 
   return (
@@ -51,7 +52,7 @@ export function AppNav() {
         <span style={{ fontSize: "16px", fontWeight: 600 }}>VCMail</span>
       </Link>
       <nav style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-        {navLinks.map((link) => {
+        {links.map((link) => {
           const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
           const isMessages = link.href === "/messages"
           return (

@@ -1,16 +1,24 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { INVESTORS } from "@/lib/data"
 import type { Investor } from "@/lib/types"
 import { InvestorCard } from "@/components/InvestorCard"
 import { InvestorDetail } from "@/components/InvestorDetail"
+import { useApp } from "@/context/AppContext"
+import { getAllEntries } from "@/lib/history"
 
 export default function InvestorsPage() {
+  const { history } = useApp()
   const [selectedInvestor, setSelectedInvestor] = useState<Investor | null>(null)
   const [search, setSearch] = useState<string>("")
   const [stageFilter, setStageFilter] = useState<string>("All")
   const [interestFilter, setInterestFilter] = useState<string>("All")
+
+  const entries = getAllEntries(history)
+  const latestScore = entries[0]?.overallScore ?? 0
+  const canViewInvestors = latestScore >= 80
 
   const stages = ["All", "Seed", "Series A", "Series B"]
   const allInterests = ["All", ...Array.from(new Set(INVESTORS.flatMap((inv) => inv.focus)))]
@@ -24,6 +32,51 @@ export default function InvestorsPage() {
     const matchInterest = interestFilter === "All" || inv.focus.includes(interestFilter)
     return matchSearch && matchStage && matchInterest
   })
+
+  if (!canViewInvestors) {
+    return (
+      <div style={{ padding: "40px 32px", maxWidth: "560px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
+          Potential Investors
+        </h1>
+        <p style={{ color: "#555", fontSize: "14px", margin: "0 0 24px" }}>
+          Complete a pitch review with a score of 80 or higher to view the investor directory.
+        </p>
+        <div
+          style={{
+            background: "#111",
+            border: "1px solid #222",
+            borderRadius: "16px",
+            padding: "32px",
+            textAlign: "center",
+            color: "#666",
+          }}
+        >
+          <p style={{ margin: "0 0 16px", fontSize: "15px" }}>
+            {entries.length === 0
+              ? "Record and review your pitch first."
+              : `Your most recent review scored ${latestScore}/100. Keep practicing to unlock investors.`}
+          </p>
+          <Link
+            href="/assessment"
+            style={{
+              display: "inline-block",
+              background: "#222",
+              border: "1px solid #333",
+              borderRadius: "12px",
+              padding: "12px 24px",
+              color: "#aaa",
+              fontSize: "14px",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            Go to Assessment →
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: "40px 32px" }}>
