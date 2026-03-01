@@ -2,27 +2,34 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import type { AccountData, Conversation, Message, HistoryData, HistoryEntry } from "@/lib/types"
+import type { Investor } from "@/lib/types"
 import type { ThemeId } from "@/lib/themes"
-import { INITIAL_CONVERSATIONS } from "@/lib/data"
+import type { AssessmentTypeId } from "@/lib/assessment-types"
+import { DEFAULT_ASSESSMENT_TYPE } from "@/lib/assessment-types"
+import { INITIAL_CONVERSATIONS, INVESTORS } from "@/lib/data"
 
 const STORAGE_ACCOUNT = "vcmail_account"
+const STORAGE_INVESTOR = "vcmail_investor_id"
 const STORAGE_CONVERSATIONS = "vcmail_conversations"
 const STORAGE_MESSAGES = "vcmail_messages"
 const STORAGE_HISTORY = "vcmail_history"
 const STORAGE_THEME = "vcmail_theme"
 const STORAGE_WORK_ON = "vcmail_work_on"
 const STORAGE_DEV_INVESTORS = "vcmail_dev_investors_unlocked"
+const STORAGE_ASSESSMENT_TYPE = "vcmail_assessment_type"
 
 interface AppContextValue {
   accountData: AccountData | null
   setAccountData: (data: AccountData | null) => void
+  investorAccount: Investor | null
+  setInvestorAccount: (investor: Investor | null) => void
   conversations: Conversation[]
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
   allMessages: Record<number, Message[]>
   setAllMessages: React.Dispatch<React.SetStateAction<Record<number, Message[]>>>
   history: HistoryData
   addToHistory: (entry: HistoryEntry) => void
-  exportHistoryJson: () => void
+  exportHistoryJson: (historyToExport?: HistoryData) => void
   themeId: ThemeId
   setThemeId: (id: ThemeId) => void
   workOnNote: string
@@ -30,6 +37,8 @@ interface AppContextValue {
   isHydrated: boolean
   devInvestorsUnlocked: boolean
   setDevInvestorsUnlocked: (unlocked: boolean) => void
+  assessmentType: AssessmentTypeId
+  setAssessmentType: (type: AssessmentTypeId) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -93,12 +102,35 @@ function loadWorkOnNote(): string {
   }
 }
 
+function loadInvestorAccount(): Investor | null {
+  if (typeof window === "undefined") return null
+  try {
+    const s = localStorage.getItem(STORAGE_INVESTOR)
+    if (!s) return null
+    const id = parseInt(s, 10)
+    return INVESTORS.find((i) => i.id === id) ?? null
+  } catch {
+    return null
+  }
+}
+
 function loadDevInvestorsUnlocked(): boolean {
   if (typeof window === "undefined") return false
   try {
     return localStorage.getItem(STORAGE_DEV_INVESTORS) === "1"
   } catch {
     return false
+  }
+}
+
+function loadAssessmentType(): AssessmentTypeId {
+  if (typeof window === "undefined") return DEFAULT_ASSESSMENT_TYPE
+  try {
+    const s = localStorage.getItem(STORAGE_ASSESSMENT_TYPE)
+    if (s === "pitch-deck" || s === "hackathon-1" || s === "hackathon-2" || s === "hackathon-3") return s
+    return DEFAULT_ASSESSMENT_TYPE
+  } catch {
+    return DEFAULT_ASSESSMENT_TYPE
   }
 }
 
@@ -112,15 +144,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [themeId, setThemeIdState] = useState<ThemeId>("timeline")
   const [workOnNote, setWorkOnNoteState] = useState<string>("")
   const [devInvestorsUnlocked, setDevInvestorsUnlockedState] = useState(false)
+  const [investorAccount, setInvestorAccountState] = useState<Investor | null>(null)
+  const [assessmentType, setAssessmentTypeState] = useState<AssessmentTypeId>(DEFAULT_ASSESSMENT_TYPE)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     setAccountDataState(loadAccount())
+    setInvestorAccountState(loadInvestorAccount())
     setConversations(loadConversations())
     setAllMessages(loadMessages())
     setHistory(loadHistory())
     setThemeIdState(loadTheme())
     setWorkOnNoteState(loadWorkOnNote())
+    setDevInvestorsUnlockedState(loadDevInvestorsUnlocked())
+    setAssessmentTypeState(loadAssessmentType())
     setHydrated(true)
   }, [])
 
@@ -142,6 +179,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDevInvestorsUnlockedState(unlocked)
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_DEV_INVESTORS, unlocked ? "1" : "0")
+    }
+  }, [])
+
+  const setAssessmentType = useCallback((type: AssessmentTypeId) => {
+    setAssessmentTypeState(type)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_ASSESSMENT_TYPE, type)
+    }
+  }, [])
+
+  const setInvestorAccount = useCallback((investor: Investor | null) => {
+    setInvestorAccountState(investor)
+    if (typeof window !== "undefined") {
+      if (investor) localStorage.setItem(STORAGE_INVESTOR, String(investor.id))
+      else localStorage.removeItem(STORAGE_INVESTOR)
     }
   }, [])
 
@@ -182,8 +234,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  const exportHistoryJson = useCallback(() => {
-    const json = JSON.stringify(history, null, 2)
+  const exportHistoryJson = useCallback((historyToExport?: HistoryData) => {
+    const data = historyToExport ?? history
+    const json = JSON.stringify(data, null, 2)
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -198,6 +251,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         accountData,
         setAccountData,
+        investorAccount,
+        setInvestorAccount,
         conversations,
         setConversations,
         allMessages,
@@ -212,6 +267,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isHydrated: hydrated,
         devInvestorsUnlocked,
         setDevInvestorsUnlocked,
+        assessmentType,
+        setAssessmentType,
       }}
     >
       {children}

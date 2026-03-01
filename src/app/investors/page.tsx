@@ -6,19 +6,25 @@ import { INVESTORS } from "@/lib/data"
 import type { Investor } from "@/lib/types"
 import { InvestorCard } from "@/components/InvestorCard"
 import { InvestorDetail } from "@/components/InvestorDetail"
+import { FoundersFeed } from "@/components/FoundersFeed"
 import { useApp } from "@/context/AppContext"
-import { getAllEntries } from "@/lib/history"
+import { getAllEntries, getHistoryForAccount } from "@/lib/history"
 
 export default function InvestorsPage() {
-  const { history, devInvestorsUnlocked } = useApp()
+  const { history, accountData, devInvestorsUnlocked, investorAccount } = useApp()
+
+  if (investorAccount) {
+    return <FoundersFeed />
+  }
   const [selectedInvestor, setSelectedInvestor] = useState<Investor | null>(null)
   const [search, setSearch] = useState<string>("")
   const [stageFilter, setStageFilter] = useState<string>("All")
   const [interestFilter, setInterestFilter] = useState<string>("All")
 
-  const entries = getAllEntries(history)
+  const founderHistory = getHistoryForAccount(history, accountData)
+  const entries = getAllEntries(founderHistory)
   const latestScore = entries[0]?.overallScore ?? 0
-  const canViewInvestors = devInvestorsUnlocked || latestScore >= 80
+  const canViewInvestors = investorAccount != null || devInvestorsUnlocked || latestScore >= 80
 
   const stages = ["All", "Seed", "Series A", "Series B"]
   const allInterests = ["All", ...Array.from(new Set(INVESTORS.flatMap((inv) => inv.focus)))]
@@ -37,7 +43,7 @@ export default function InvestorsPage() {
     return (
       <div style={{ padding: "40px 32px", maxWidth: "560px", margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
-          Potential Investors
+          Funding
         </h1>
         <p style={{ color: "#555", fontSize: "14px", margin: "0 0 24px" }}>
           Complete a pitch review with a score of 80 or higher to view the investor directory.
@@ -55,7 +61,7 @@ export default function InvestorsPage() {
           <p style={{ margin: "0 0 16px", fontSize: "15px" }}>
             {entries.length === 0
               ? "Record and review your pitch first."
-              : `Your most recent review scored ${latestScore}/100. Keep practicing to unlock investors.`}
+              : `Your most recent review scored ${latestScore}/100. Keep practicing to unlock funding.`}
           </p>
           <Link
             href="/assessment"
@@ -82,7 +88,7 @@ export default function InvestorsPage() {
     <div style={{ padding: "40px 32px", maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.5px" }}>
-          Potential Investors
+          Funding
         </h1>
         <p style={{ color: "#555", fontSize: "14px", margin: 0 }}>
           {INVESTORS.length} VCs actively investing in software startups
@@ -105,7 +111,7 @@ export default function InvestorsPage() {
         >
           <span style={{ color: "#555" }}>🔍</span>
           <input
-            placeholder="Search investors..."
+            placeholder="Search funding..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -179,7 +185,7 @@ export default function InvestorsPage() {
       </div>
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", color: "#555", padding: "60px", fontSize: "15px" }}>
-          No investors match your search
+          No funding matches your search
         </div>
       )}
       {selectedInvestor && (

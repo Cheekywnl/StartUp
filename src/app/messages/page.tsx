@@ -81,7 +81,7 @@ function MessagesContent() {
   if (!active) {
     return (
       <div style={{ padding: "40px", textAlign: "center", color: "#555" }}>
-        <p>No conversations yet. <Link href="/investors" style={{ color: "#667eea" }}>Browse investors</Link> to start messaging.</p>
+        <p>No conversations yet. <Link href="/investors" style={{ color: "#667eea" }}>Browse funding</Link> to start messaging.</p>
       </div>
     )
   }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { getSummaryPhaseItems } from "@/lib/history";
+import { getHistoryForAccount, getSummaryPhaseItems } from "@/lib/history";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ChecklistItem {
@@ -281,7 +281,8 @@ function ChecklistPanel({
 export default function EntrepreneurTimeline() {
   const [active, setActive] = useState<string | number | null>(null);
   const { history, workOnNote, setWorkOnNote, accountData } = useApp();
-  const summaryItems = getSummaryPhaseItems(history);
+  const displayHistory = getHistoryForAccount(history, accountData);
+  const summaryItems = getSummaryPhaseItems(displayHistory);
 
   const milestones = MILESTONES.map((m, phaseIdx) => {
     const extraItems = summaryItems[phaseIdx] ?? [];
@@ -310,7 +311,7 @@ export default function EntrepreneurTimeline() {
 
       {/* Hero */}
       <header style={timelineStyles.hero}>
-        <p style={timelineStyles.eyebrow}>{accountData?.product ?? "VCMail"}</p>
+        <p style={timelineStyles.eyebrow}>{accountData?.product ?? "StartUp"}</p>
         <h1 style={timelineStyles.heroTitle}>
           From Idea<br />to Scale
         </h1>

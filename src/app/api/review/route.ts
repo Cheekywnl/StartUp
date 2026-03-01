@@ -3,6 +3,8 @@ import { buildReviewPrompt } from "@/lib/review/prompts"
 import type { ReviewResult } from "@/lib/review/types"
 import type { AccountData } from "@/lib/types"
 import { INVESTORS } from "@/lib/data"
+import { DEFAULT_ASSESSMENT_TYPE } from "@/lib/assessment-types"
+import type { AssessmentTypeId } from "@/lib/assessment-types"
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY
@@ -18,9 +20,10 @@ export async function POST(request: NextRequest) {
       account: AccountData | null
       transcript: string
       investorId?: number
+      assessmentType?: AssessmentTypeId
     }
 
-    const { account, transcript, investorId } = body
+    const { account, transcript, investorId, assessmentType = DEFAULT_ASSESSMENT_TYPE } = body
     if (!transcript?.trim()) {
       return NextResponse.json({ error: "Transcript required" }, { status: 400 })
     }
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const investor = investorId ? INVESTORS.find((i) => i.id === investorId) ?? null : null
-    const prompt = buildReviewPrompt(account, transcript, githubSummary, investor)
+    const prompt = buildReviewPrompt(account, transcript, githubSummary, investor, assessmentType)
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",

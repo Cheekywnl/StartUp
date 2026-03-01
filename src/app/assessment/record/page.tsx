@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
+import { DEFAULT_ASSESSMENT_TYPE } from "@/lib/assessment-types"
+import type { AssessmentTypeId } from "@/lib/assessment-types"
 
 async function transcribeWithOpenAI(blob: Blob): Promise<string> {
   const formData = new FormData()
@@ -78,7 +80,13 @@ async function captureVideoThumbnail(blob: Blob): Promise<string | null> {
 
 export default function AssessmentRecordPage() {
   const router = useRouter()
-  const { accountData, addToHistory, exportHistoryJson } = useApp()
+  const searchParams = useSearchParams()
+  const { accountData, addToHistory, setAssessmentType, exportHistoryJson } = useApp()
+  const assessmentType = (searchParams.get("type") as AssessmentTypeId) || DEFAULT_ASSESSMENT_TYPE
+
+  useEffect(() => {
+    if (assessmentType) setAssessmentType(assessmentType)
+  }, [assessmentType, setAssessmentType])
   const [step, setStep] = useState<string>("preview")
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
@@ -195,6 +203,7 @@ export default function AssessmentRecordPage() {
         body: JSON.stringify({
           account: accountData,
           transcript: transcriptText || "No speech detected.",
+          assessmentType,
         }),
       })
 
@@ -231,6 +240,7 @@ export default function AssessmentRecordPage() {
           advice: fallbackFeedback.advice,
           overallScore: fallbackFeedback.overallScore,
           thumbnail: thumbnail ?? undefined,
+          ...(assessmentType !== "pitch-deck" && { assessmentType }),
         })
       } else {
         const reviewFeedback = {
@@ -249,6 +259,7 @@ export default function AssessmentRecordPage() {
           advice: reviewFeedback.advice,
           overallScore: reviewFeedback.overallScore,
           thumbnail: thumbnail ?? undefined,
+          ...(assessmentType !== "pitch-deck" && { assessmentType }),
         })
       }
     } catch (err) {
@@ -546,7 +557,7 @@ export default function AssessmentRecordPage() {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             {feedback && feedback.overallScore >= 80 ? (
               <button onClick={handleBrowseInvestors} style={s.btn()}>
-                Browse Investors →
+                Browse Funding →
               </button>
             ) : feedback ? (
               <button onClick={() => router.push("/")} style={s.btn()}>

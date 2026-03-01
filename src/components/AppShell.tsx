@@ -12,13 +12,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div
       style={{
         minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
         background: theme.bg,
         color: theme.text,
         fontFamily: theme.fontFamily,
       }}
     >
       <AppNav />
-      <main>{children}</main>
+      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>{children}</main>
     </div>
   )
 }

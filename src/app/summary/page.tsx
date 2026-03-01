@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
-import { getHistorySummary } from "@/lib/history"
+import { getHistoryForAccount, getHistorySummary } from "@/lib/history"
 
 export default function SummaryPage() {
-  const { history } = useApp()
-  const summary = getHistorySummary(history)
+  const { history, accountData } = useApp()
+  const displayHistory = getHistoryForAccount(history, accountData)
+  const summary = getHistorySummary(displayHistory)
 
   if (summary.totalRecordings === 0) {
     return (

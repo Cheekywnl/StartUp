@@ -63,7 +63,7 @@ export default function ProfilePage() {
             textDecoration: "none",
           }}
         >
-          ← Investors
+          ← Funding
         </Link>
         <Link
           href="/create-account"

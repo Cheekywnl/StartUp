@@ -2,13 +2,16 @@
 
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
+import { getHistoryForAccount } from "@/lib/history"
+import { getAssessmentTypeLabel } from "@/lib/assessment-types"
 import type { HistoryEntry } from "@/lib/types"
 
 export default function HistoryPage() {
-  const { history, exportHistoryJson } = useApp()
+  const { history, accountData, exportHistoryJson } = useApp()
+  const displayHistory = getHistoryForAccount(history, accountData)
 
-  const dates = Object.keys(history).sort((a, b) => b.localeCompare(a))
-  const totalEntries = dates.reduce((sum, d) => sum + history[d].length, 0)
+  const dates = Object.keys(displayHistory).sort((a, b) => b.localeCompare(a))
+  const totalEntries = dates.reduce((sum, d) => sum + displayHistory[d].length, 0)
 
   return (
     <div style={{ padding: "40px 32px", maxWidth: "800px", margin: "0 auto" }}>
@@ -92,7 +95,7 @@ export default function HistoryPage() {
                 })}
               </div>
               <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                {history[date].map((entry: HistoryEntry, i: number) => (
+                {displayHistory[date].map((entry: HistoryEntry, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -102,9 +105,19 @@ export default function HistoryPage() {
                       padding: "16px",
                     }}
                   >
-                    <div style={{ fontSize: "11px", color: "#555", marginBottom: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "#555", marginBottom: "8px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px" }}>
                       {new Date(entry.timestamp).toLocaleTimeString()}
                       {entry.account && ` · ${entry.account.name} (${entry.account.product})`}
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: (entry.assessmentType ?? "pitch-deck").startsWith("hackathon") ? "#a78bfa" : "#444",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {getAssessmentTypeLabel(entry.assessmentType)}
+                      </span>
                     </div>
                     <p
                       style={{

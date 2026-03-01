@@ -72,6 +72,8 @@ export interface HistoryEntry {
   overallScore?: number
   /** Base64 data URL of a frame captured from the pitch video */
   thumbnail?: string
+  /** Assessment type (pitch-deck, hackathon-1, etc.) */
+  assessmentType?: string
 }
 
 export type HistoryData = Record<string, HistoryEntry[]>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import type { AccountData } from "@/lib/types"
 
@@ -69,6 +70,19 @@ export default function CreateAccountPage() {
   const handleSubmit = () => {
     if (!validate()) return
     setAccountData(form)
+    router.push("/")
+  }
+
+  const DILLON_ACCOUNT: AccountData = {
+    name: "Dillon Rahman",
+    product: "StartUP",
+    description:
+      "Startups get one shot to make an impression—at a hackathon, with an investor, or at a demo day. StartUp helps you get ready. Record a 60-second pitch on camera, and our AI transcribes it and scores you on clarity, credibility, investor fit, your ask, and consistency. You get scores, red flags, and concrete advice. Track your progress over time. We support hackathon categories (Data in Finance, Financial Inclusion, Solution for Startups) so you can practice for university competitions. Plus an investor directory and messaging to move from practice to outreach in the same app. StartUp is your pitch coach and investor hub in one.",
+    github: "https://github.com/Cheekywnl/StartUp",
+  }
+
+  const handleSignInAsDillon = () => {
+    setAccountData(DILLON_ACCOUNT)
     router.push("/")
   }
 
@@ -183,21 +197,55 @@ export default function CreateAccountPage() {
           </div>
         ))}
       </div>
-      <button
-        onClick={handleSubmit}
-        style={{
-          background: "linear-gradient(135deg, #405de6, #833ab4, #c13584)",
-          border: "none",
-          borderRadius: "12px",
-          padding: "14px 28px",
-          color: "#fff",
-          fontWeight: 700,
-          fontSize: "14px",
-          cursor: "pointer",
-        }}
-      >
-        Create Account →
-      </button>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={handleSubmit}
+            style={{
+              background: "linear-gradient(135deg, #405de6, #833ab4, #c13584)",
+              border: "none",
+              borderRadius: "12px",
+              padding: "14px 28px",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            Create Account →
+          </button>
+          <Link
+            href="/investor-signin"
+            style={{
+              padding: "14px 28px",
+              borderRadius: "12px",
+              fontSize: "14px",
+              fontWeight: 600,
+              textDecoration: "none",
+              color: "#aaa",
+              background: "#222",
+              border: "1px solid #333",
+            }}
+          >
+            Sign in as investor
+          </Link>
+        </div>
+        <button
+          type="button"
+          onClick={handleSignInAsDillon}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            color: "#555",
+            fontSize: "13px",
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Sign in as Dillon
+        </button>
+      </div>
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { Providers } from '@/components/Providers'
 import { AppShell } from '@/components/AppShell'
 
 export const metadata: Metadata = {
-  title: 'VCMail — Connect with Investors',
+  title: 'StartUp — Connect with Investors',
   description: 'Create account, record your pitch, and connect with potential investors',
 }
 

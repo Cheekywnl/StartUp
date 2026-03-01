@@ -1,10 +1,29 @@
-import type { HistoryData, HistoryEntry, HistoryFeedbackItem } from "./types"
+import type { AccountData, HistoryData, HistoryEntry, HistoryFeedbackItem } from "./types"
 
 /** Flatten history into a single array of entries, newest first */
 export function getAllEntries(history: HistoryData): HistoryEntry[] {
   return Object.entries(history)
     .flatMap(([date, entries]) => entries.map((e) => ({ ...e, date })))
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+}
+
+/** Match entry account to the given account (by name + product) */
+function accountMatches(entryAccount: AccountData | null, account: AccountData | null): boolean {
+  if (!entryAccount || !account) return false
+  return entryAccount.name === account.name && entryAccount.product === account.product
+}
+
+/** Return history filtered to only entries for the given account. For founder view - they only see their own. */
+export function getHistoryForAccount(history: HistoryData, account: AccountData | null): HistoryData {
+  if (!account) return {}
+  const entries = getAllEntries(history).filter((e) => accountMatches(e.account, account))
+  const filtered: HistoryData = {}
+  for (const e of entries) {
+    const dateKey = e.timestamp.slice(0, 10)
+    if (!filtered[dateKey]) filtered[dateKey] = []
+    filtered[dateKey].push(e)
+  }
+  return filtered
 }
 
 /** Get average score for a feedback label across all entries */
