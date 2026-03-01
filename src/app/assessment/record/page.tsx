@@ -21,6 +21,61 @@ async function transcribeWithOpenAI(blob: Blob): Promise<string> {
   return data.text?.trim() || ""
 }
 
+async function captureVideoThumbnail(blob: Blob): Promise<string | null> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video")
+    video.muted = true
+    video.playsInline = true
+    video.crossOrigin = "anonymous"
+    const url = URL.createObjectURL(blob)
+    video.src = url
+
+    const cleanup = () => {
+      URL.revokeObjectURL(url)
+      video.remove()
+    }
+
+    video.addEventListener("error", () => {
+      cleanup()
+      resolve(null)
+    })
+
+    video.addEventListener("loadeddata", () => {
+      video.currentTime = Math.min(1, video.duration / 2)
+    })
+
+    video.addEventListener("seeked", () => {
+      try {
+        const w = video.videoWidth
+        const h = video.videoHeight
+        if (!w || !h) {
+          cleanup()
+          resolve(null)
+          return
+        }
+        const canvas = document.createElement("canvas")
+        canvas.width = Math.min(w, 640)
+        canvas.height = Math.min(h, 360)
+        const ctx = canvas.getContext("2d")
+        if (!ctx) {
+          cleanup()
+          resolve(null)
+          return
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.6)
+        cleanup()
+        resolve(dataUrl)
+      } catch {
+        cleanup()
+        resolve(null)
+      }
+    })
+
+    video.load()
+  })
+}
+
 export default function AssessmentRecordPage() {
   const router = useRouter()
   const { accountData, addToHistory, exportHistoryJson } = useApp()
@@ -127,7 +182,10 @@ export default function AssessmentRecordPage() {
     setFeedback(null)
 
     try {
-      const transcriptText = await transcribeWithOpenAI(blob)
+      const [transcriptText, thumbnail] = await Promise.all([
+        transcribeWithOpenAI(blob),
+        captureVideoThumbnail(blob),
+      ])
       setTranscription(transcriptText || "No speech detected.")
       setStep("transcribed")
 
@@ -172,6 +230,7 @@ export default function AssessmentRecordPage() {
           redFlags: fallbackFeedback.redFlags,
           advice: fallbackFeedback.advice,
           overallScore: fallbackFeedback.overallScore,
+          thumbnail: thumbnail ?? undefined,
         })
       } else {
         const reviewFeedback = {
@@ -189,6 +248,7 @@ export default function AssessmentRecordPage() {
           redFlags: reviewFeedback.redFlags,
           advice: reviewFeedback.advice,
           overallScore: reviewFeedback.overallScore,
+          thumbnail: thumbnail ?? undefined,
         })
       }
     } catch (err) {

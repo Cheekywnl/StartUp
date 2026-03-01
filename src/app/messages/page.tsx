@@ -31,29 +31,30 @@ function MessagesContent() {
 
   useEffect(() => {
     if (!idParam) return
-    const investorId = parseInt(idParam, 10)
-    if (isNaN(investorId)) return
-    const investor = INVESTORS.find((i) => i.id === investorId)
-    if (!investor) return
-    const exists = conversations.find((c) => c.name === investor.name)
-    if (!exists) {
-      const newConv = {
-        id: investor.id,
-        name: investor.name,
-        handle: investor.handle.replace("@", ""),
-        avatar: investor.avatar,
-        avatarColor: investor.avatarColor,
-        online: investor.online,
-        firm: investor.firm,
-        lastMessage: "Start a conversation",
-        lastTime: "now",
-        unread: 0,
-        messages: [],
+    const convId = parseInt(idParam, 10)
+    if (isNaN(convId)) return
+    const investor = INVESTORS.find((i) => i.id === convId)
+    if (investor) {
+      const exists = conversations.find((c) => c.name === investor.name)
+      if (!exists) {
+        const newConv = {
+          id: investor.id,
+          name: investor.name,
+          handle: investor.handle.replace("@", ""),
+          avatar: investor.avatar,
+          avatarColor: investor.avatarColor,
+          online: investor.online,
+          firm: investor.firm,
+          lastMessage: "Start a conversation",
+          lastTime: "now",
+          unread: 0,
+          messages: [],
+        }
+        setConversations((prev) => [newConv, ...prev])
+        setAllMessages((prev) => ({ ...prev, [investor.id]: [] }))
       }
-      setConversations((prev) => [newConv, ...prev])
-      setAllMessages((prev) => ({ ...prev, [investor.id]: [] }))
     }
-    setActiveId(investorId)
+    setActiveId(convId)
   }, [idParam, conversations, setConversations, setAllMessages])
 
   useEffect(() => {

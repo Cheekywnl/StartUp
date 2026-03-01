@@ -70,6 +70,8 @@ export interface HistoryEntry {
   redFlags?: string[]
   advice?: string[]
   overallScore?: number
+  /** Base64 data URL of a frame captured from the pitch video */
+  thumbnail?: string
 }
 
 export type HistoryData = Record<string, HistoryEntry[]>

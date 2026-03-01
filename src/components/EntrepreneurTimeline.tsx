@@ -188,7 +188,7 @@ function ChecklistPanel({
             <h2 style={panelStyles.panelTitle}>{checklist.title}</h2>
             <p style={panelStyles.panelDesc}>{checklist.description}</p>
           </div>
-          <button style={panelStyles.closeBtn} onClick={onClose} aria-label="Close">
+          <button type="button" style={panelStyles.closeBtn} onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
@@ -305,7 +305,7 @@ export default function EntrepreneurTimeline() {
   const activeMilestone = milestones.find((m) => m.id === active) ?? null;
 
   return (
-    <div style={timelineStyles.page}>
+    <div className="timeline-page" style={timelineStyles.page}>
       <style>{timelineCss}</style>
 
       {/* Hero */}
@@ -324,7 +324,7 @@ export default function EntrepreneurTimeline() {
       <section style={workOnStyles.section}>
         <label style={workOnStyles.label}>What to work on</label>
         <textarea
-          value={workOnNote}
+          value={workOnNote ?? ""}
           onChange={(e) => setWorkOnNote(e.target.value)}
           placeholder="e.g. Improve clarity in the first 30 seconds, add specific metrics for credibility..."
           style={workOnStyles.textarea}
@@ -352,6 +352,7 @@ export default function EntrepreneurTimeline() {
               {/* Card */}
               <div style={timelineStyles.cardSide}>
                 <button
+                  type="button"
                   className="milestone-card"
                   style={{
                     ...timelineStyles.card,
@@ -382,6 +383,7 @@ export default function EntrepreneurTimeline() {
               {/* Node */}
               <div style={timelineStyles.nodeSide}>
                 <button
+                  type="button"
                   className="milestone-node"
                   style={{
                     ...timelineStyles.node,
@@ -590,7 +592,8 @@ const timelineStyles: Record<string, React.CSSProperties> = {
 const timelineCss = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .timeline-page { box-sizing: border-box; }
+  .timeline-page * { box-sizing: border-box; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(24px); }

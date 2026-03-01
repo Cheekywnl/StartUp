@@ -26,8 +26,15 @@ const navLinksLoggedIn = [
 export function AppNav() {
   const pathname = usePathname()
   const { accountData, conversations, themeId, devInvestorsUnlocked, setDevInvestorsUnlocked } = useApp()
-  const theme = THEMES[themeId]
-  const links = accountData ? navLinksLoggedIn : navLinksLoggedOut
+  const theme = THEMES[themeId] ?? THEMES["timeline"]
+  const baseLinks = accountData ? navLinksLoggedIn : navLinksLoggedOut
+  const links = devInvestorsUnlocked
+    ? baseLinks.flatMap((link) =>
+        link.href === "/assessment"
+          ? [link, { href: "/investor-page", label: "Investor Page" }]
+          : [link]
+      )
+    : baseLinks
   const unreadCount = conversations.reduce((sum, c) => sum + c.unread, 0)
 
   return (
@@ -45,6 +52,7 @@ export function AppNav() {
     >
       <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: "40px" }}>
         <button
+          type="button"
           onClick={() => setDevInvestorsUnlocked(!devInvestorsUnlocked)}
           title={devInvestorsUnlocked ? "Investors unlocked (dev)" : "Unlock investors (dev)"}
           style={{
@@ -126,12 +134,12 @@ export function AppNav() {
         )}
       </div>
       <nav style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-        {links.map((link) => {
+        {links.map((link, i) => {
           const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
           const isMessages = link.href === "/messages"
           return (
             <Link
-              key={link.href}
+              key={`${link.href}-${link.label}-${i}`}
               href={link.href}
               style={{
                 padding: "8px 14px",
